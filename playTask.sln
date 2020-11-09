@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayTask", "PlayTask\PlayTask.csproj", "{12E54A43-7FF0-4C74-BBA7-1B3BB805CDFA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayThread", "PlayThread\PlayThread.csproj", "{817C6B72-22D6-4267-9D40-D56412A07879}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{12E54A43-7FF0-4C74-BBA7-1B3BB805CDFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12E54A43-7FF0-4C74-BBA7-1B3BB805CDFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12E54A43-7FF0-4C74-BBA7-1B3BB805CDFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12E54A43-7FF0-4C74-BBA7-1B3BB805CDFA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{817C6B72-22D6-4267-9D40-D56412A07879}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{817C6B72-22D6-4267-9D40-D56412A07879}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{817C6B72-22D6-4267-9D40-D56412A07879}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{817C6B72-22D6-4267-9D40-D56412A07879}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

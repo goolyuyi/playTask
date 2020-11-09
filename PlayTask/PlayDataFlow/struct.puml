@@ -1,0 +1,62 @@
+@startuml
+interface IDataflowBlock{
+    Task Completion { get; }
+    void Complete();
+    void Fault(Exception exception);
+}
+
+interface ISourceBlock {
+    LinkTo(ITargetBlock);
+    ReserveMessage
+    ReleaseReservation
+    ConsumeMessage
+    TOutput Receive();
+}
+
+IDataflowBlock<|--ISourceBlock
+
+
+interface IReceivableSourceBlock{
+    TryReceive();
+    TryReceiveAll();
+}
+IDataflowBlock<|--IReceivableSourceBlock
+ISourceBlock<|--IReceivableSourceBlock
+
+
+interface ITargetBlock{
+    OfferMessage 
+    Post();
+}
+IDataflowBlock <|-- ITargetBlock
+
+interface IPropagatorBlock
+ISourceBlock <|-- IPropagatorBlock
+ITargetBlock <|-- IPropagatorBlock
+IDataflowBlock <|-- IPropagatorBlock
+
+class ActionBlock
+ITargetBlock <|.. ActionBlock
+
+class TransformBlock
+IPropagatorBlock <|.. TransformBlock
+IReceivableSourceBlock <|.. TransformBlock
+
+class TransformManyBlock
+IPropagatorBlock <|.. TransformManyBlock
+IReceivableSourceBlock <|.. TransformManyBlock
+
+
+class BufferBlock
+IPropagatorBlock <|.. BufferBlock
+IReceivableSourceBlock <|.. BufferBlock
+
+class WriteOnceBlock
+IPropagatorBlock <|.. WriteOnceBlock
+IReceivableSourceBlock <|.. WriteOnceBlock
+
+class BroadcastBlock
+IPropagatorBlock <|.. BroadcastBlock
+IReceivableSourceBlock <|.. BroadcastBlock
+
+@enduml
