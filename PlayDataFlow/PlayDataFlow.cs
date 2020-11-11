@@ -8,10 +8,29 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
-namespace playTask.PlayDataFlow
+namespace PlayDataFlow
 {
     public class PlayDataFlow
     {
+        public static void Play()
+        {
+            MyConcept();
+            // MyConcept_Choose();
+            // MyConcept_Compete();
+
+            // Concept();
+            // Concept2();
+            // Concept3();
+
+            // TargetToSource();
+            // TransformPlay();
+            // PlayPipe();
+            // PlayCancel();
+            // PlayParallel();
+            // PlayJoin();
+        }
+
+
         #region #PlayParallel
 
         static TimeSpan TimeDataflowComputations(int maxDegreeOfParallelism,
@@ -27,6 +46,7 @@ namespace playTask.PlayDataFlow
 
             for (int i = 0; i < messageCount; i++)
             {
+                //NOTE actionBlock 可以在多个线程上并行执行!
                 workerBlock.Post(1000);
             }
 
@@ -112,8 +132,9 @@ namespace playTask.PlayDataFlow
             var downloadString = new TransformBlock<string, string>(async uri =>
             {
                 Console.WriteLine("Downloading '{0}'...", uri);
-                return await new HttpClient(new HttpClientHandler
+                var res = await new HttpClient(new HttpClientHandler
                     {AutomaticDecompression = System.Net.DecompressionMethods.GZip}).GetStringAsync(uri);
+                return res;
             });
 
             var createWordList = new TransformBlock<string, string[]>(text =>
@@ -171,27 +192,27 @@ namespace playTask.PlayDataFlow
 
         #region #TransformPlay
 
-        static async Task<int> CountBytesAsync(string path)
-        {
-            byte[] buffer = new byte[1024];
-            int totalZeroBytesRead = 0;
-            using (var fileStream = new FileStream(
-                path, FileMode.Open, FileAccess.Read, FileShare.Read, 0x1000, true))
-            {
-                int bytesRead = 0;
-                do
-                {
-                    // Asynchronously read from the file stream.
-                    bytesRead = await fileStream.ReadAsync(buffer, 0, buffer.Length);
-                    totalZeroBytesRead += buffer.Count(b => b == 0);
-                } while (bytesRead > 0);
-            }
-
-            return totalZeroBytesRead;
-        }
-
         private static void TransformPlay()
         {
+            async Task<int> CountBytesAsync(string path)
+            {
+                byte[] buffer = new byte[1024];
+                int totalZeroBytesRead = 0;
+                using (var fileStream = new FileStream(
+                    path, FileMode.Open, FileAccess.Read, FileShare.Read, 0x1000, true))
+                {
+                    int bytesRead = 0;
+                    do
+                    {
+                        // Asynchronously read from the file stream.
+                        bytesRead = await fileStream.ReadAsync(buffer, 0, buffer.Length);
+                        totalZeroBytesRead += buffer.Count(b => b == 0);
+                    } while (bytesRead > 0);
+                }
+
+                return totalZeroBytesRead;
+            }
+
             string tempFile = Path.GetTempFileName();
 
             using (var fileStream = File.OpenWrite(tempFile))
@@ -228,35 +249,36 @@ namespace playTask.PlayDataFlow
 
         #region TargetToSource
 
-        static void Produce(ITargetBlock<byte[]> target)
-        {
-            Random rand = new Random();
-
-            for (int i = 0; i < 100; i++)
-            {
-                byte[] buffer = new byte[1024];
-                rand.NextBytes(buffer);
-                target.Post(buffer);
-            }
-
-            target.Complete();
-        }
-
-        static async Task<int> ConsumeAsync(ISourceBlock<byte[]> source)
-        {
-            int bytesProcessed = 0;
-
-            while (await source.OutputAvailableAsync())
-            {
-                byte[] data = source.Receive();
-                bytesProcessed += data.Length;
-            }
-
-            return bytesProcessed;
-        }
-
         private static void TargetToSource()
         {
+            void Produce(ITargetBlock<byte[]> target)
+            {
+                Random rand = new Random();
+
+                for (int i = 0; i < 100; i++)
+                {
+                    byte[] buffer = new byte[1024];
+                    rand.NextBytes(buffer);
+
+                    target.Post(buffer);
+                }
+
+                target.Complete();
+            }
+
+            async Task<int> ConsumeAsync(ISourceBlock<byte[]> source)
+            {
+                int bytesProcessed = 0;
+
+                while (await source.OutputAvailableAsync())
+                {
+                    byte[] data = source.Receive();
+                    bytesProcessed += data.Length;
+                }
+
+                return bytesProcessed;
+            }
+
             var buffer = new BufferBlock<byte[]>();
 
             var consumer = ConsumeAsync(buffer);
@@ -268,25 +290,6 @@ namespace playTask.PlayDataFlow
 
         #endregion
 
-
-        public static void Play()
-        {
-            // MyConcept();
-            // MyConcept_Choose();
-            // MyConcept_Compete();
-
-
-            // Concept();
-            // Concept2();
-            // Concept3();
-
-            // TargetToSource();
-            // TransformPlay();
-            // PlayPipe();
-            // PlayCancel();
-            PlayParallel();
-            PlayJoin();
-        }
 
         #region #JoinBlock
 
@@ -311,6 +314,7 @@ namespace playTask.PlayDataFlow
             var networkResources = new BufferBlock<NetworkResource>();
             var fileResources = new BufferBlock<FileResource>();
             var memoryResources = new BufferBlock<MemoryResource>();
+            
             var joinNetworkAndMemoryResources =
                 new JoinBlock<NetworkResource, MemoryResource>(
                     new GroupingDataflowBlockOptions
@@ -377,53 +381,65 @@ namespace playTask.PlayDataFlow
 
         #endregion
 
+
         #region #MyConcept
 
         private static void MyConcept()
         {
             var srcBuf = new BufferBlock<string>();
             var tarBuf = new BufferBlock<string>();
-            var tarCwl = new ActionBlock<string>(s => { Console.WriteLine($"tar2:{s}"); });
+
+            var tarOutput = new ActionBlock<string>(s => { Console.WriteLine($"tar2:{s}"); });
 
             bool LengthPredicate(string s)
             {
                 return s.Length >= 5;
             }
 
+            //NOTE dispose this to breaking the link
             using (srcBuf.LinkTo(tarBuf))
             {
+                //NOTE input
                 srcBuf.Post("youtrack");
+                //NOTE output
                 Console.WriteLine(tarBuf.Receive());
             }
 
-            var tranBroadcast = new BroadcastBlock<string>(null);
+            var transformBroadcast = new BroadcastBlock<string>(null);
 
-            tranBroadcast.LinkTo(tarCwl, LengthPredicate);
-            tranBroadcast.LinkTo(tarBuf, LengthPredicate);
-            tranBroadcast.Post("you");
-            tranBroadcast.Post("youtrack");
+            //NOTE tarOutput<--transformBroadcast
+            //NOTE srcBuf<--transformBroadcastd
+            transformBroadcast.LinkTo(tarOutput, LengthPredicate);
+            transformBroadcast.LinkTo(tarBuf, LengthPredicate);
+            transformBroadcast.Post("you");
+            transformBroadcast.Post("youtrack");
 
             Console.WriteLine(tarBuf.Receive());
         }
 
         private static void MyConcept_Choose()
         {
-            //NOTE Choose 监听源
-            var srcBuf = new BufferBlock<string>();
-            var srcBuf2 = new BufferBlock<string>();
+            //NOTE 这里 BufferBlock 即是 source 也是 target
+            var buf = new BufferBlock<string>();
 
-            var task = DataflowBlock.Choose(srcBuf, async s => { Console.WriteLine(s); }, srcBuf2,
-                s => { Console.WriteLine(s); });
-            srcBuf.Post("aaaaaa");
+            var buf2 = new BufferBlock<string>();
+
+            //NOTE Choose 监听源
+            //NOTE 对于两个源,谁先有消息谁先执行
+            var task = DataflowBlock.Choose(buf, async s => { Console.WriteLine($"src1:{s}"); }, buf2,
+                s => { Console.WriteLine($"src2:{s}"); });
+
+            buf.Post("aaaaaa");
+            buf2.Post("bbbbb");
             task.Wait();
         }
 
         private static void MyConcept_Compete()
         {
             var srcBuf = new BufferBlock<string>();
-            var tarCwl = new ActionBlock<string>(s => { Console.WriteLine($"tar2:{s}"); });
+            var tarOutput = new ActionBlock<string>(s => { Console.WriteLine($"tar2:{s}"); });
 
-            srcBuf.LinkTo(tarCwl);
+            srcBuf.LinkTo(tarOutput);
             srcBuf.Post("aaaaaa");
 
             srcBuf.Complete();
@@ -431,7 +447,7 @@ namespace playTask.PlayDataFlow
             //NOTE source 中可能会抛错
             try
             {
-                tarCwl.Completion.Wait();
+                tarOutput.Completion.Wait();
             }
             catch (Exception e)
             {
@@ -447,7 +463,7 @@ namespace playTask.PlayDataFlow
         {
             var bufferBlock = new BufferBlock<int>();
 
-            var post01 = Task.Run(() =>
+            var post = Task.Run(() =>
             {
                 Console.WriteLine(
                     $"Task.CurrentId:{Task.CurrentId},Thread.CurrentThread.ManagedThreadId:{Thread.CurrentThread.ManagedThreadId}");
@@ -472,7 +488,7 @@ namespace playTask.PlayDataFlow
                 bufferBlock.Post(2);
             });
 
-            Task.WaitAll(post01, receive, post2);
+            Task.WaitAll(post, receive, post2);
         }
 
 
@@ -520,7 +536,7 @@ namespace playTask.PlayDataFlow
         {
             var bufferBlock = new BufferBlock<int>();
 
-            // Demonstrate asynchronous dataflow operations.
+            //NOTE Demonstrate asynchronous dataflow operations.
             AsyncSendReceive(bufferBlock).Wait();
         }
 

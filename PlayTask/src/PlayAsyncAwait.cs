@@ -2,9 +2,9 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace playCS.playThreadsWorld
+namespace playTask
 {
-    public class PlayAsyncAwait
+    public static class PlayAsyncAwait
     {
         public static void Play()
         {
@@ -13,12 +13,13 @@ namespace playCS.playThreadsWorld
             AwaitIt3Async();
             AwaitIt4Async();
             AwaitIt5Async();
+
             //guardian
             Task.Delay(2000).Wait();
         }
 
-        //* 用 await 必须申明 async!
-        //* 约定***Async
+        //NOTE 用 await 必须申明 async!
+        //* 约定命名:[***Async]
         static async void AwaitItAsync()
         {
             async Task Coffee()
@@ -31,7 +32,7 @@ namespace playCS.playThreadsWorld
         }
 
 
-        //* Task / Task<Result>
+        //NOTE Task<Result>
         static async void AwaitIt2Async()
         {
             async Task<string> ComplexThing(string s)
@@ -45,6 +46,7 @@ namespace playCS.playThreadsWorld
         }
 
 
+        //NOTE use WhenAll!
         static async void AwaitIt3Async()
         {
             async Task M()
@@ -55,13 +57,14 @@ namespace playCS.playThreadsWorld
 
             await Task.WhenAll(Task.Delay(1000), M());
 
-            //This is sync version
+            //NOTE This is also sync 
             // Task.WaitAll(Task.Delay(1000), M());
 
             Console.WriteLine("Done!");
         }
 
-        //Cancel by token
+
+        //NOTE Cancel by token
         static async void AwaitIt4Async()
         {
             CancellationTokenSource cts = new CancellationTokenSource();
@@ -71,13 +74,31 @@ namespace playCS.playThreadsWorld
                 await Task.Delay(10000, cts.Token);
             }
 
-            Do();
-            await Task.Delay(500);
-            cts.Cancel();
-            Console.WriteLine(nameof(AwaitIt4Async) + "OKAY");
+            Task taskDo = default;
+            try
+            {
+                taskDo = Do();
+                await Task.Delay(500);
+                cts.Cancel();
+
+                //NOTE will throw a TaskCanceledException because AWAIT
+                await taskDo;
+                Console.WriteLine(nameof(AwaitIt4Async) + "OKAY");
+            }
+            catch (TaskCanceledException e)
+            {
+                Console.WriteLine(taskDo?.IsCanceled); //TRUE
+                Console.WriteLine(taskDo?.IsCompleted); //FALSE
+                Console.WriteLine(taskDo?.Status);
+
+
+                //NOTE get a TaskCanceledException here
+                Console.WriteLine(e);
+            }
         }
 
 
+        //NOTE await
         static async void AwaitIt5Async()
         {
             int n = 1000 * 1000;

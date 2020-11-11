@@ -1,26 +1,30 @@
 ## 概念
-* Source: 发出
-    * Receive: Source 的发出口
-* Target: 接收
-    * Post: Target 的接收口
-* IPropagatorBlock: 进出
+* Source: output
+    * Receive: Source's Output Method
+* Target: input
+    * Post: Target's Input Method
+* IPropagatorBlock: Input & Output
     
 ## Link
 * Link 方向:Source -> Target
+* Data 方向:Source <- Target
 * Link 操作是线程安全的
 * LinkTo 可指定 Predicate<> 功能就是 Filter
 
-## 传递消息Src->Target
-1. Src call Target.OfferMessage
+## DataFlow Target->Src
+1. Target call Target.OfferMessage
+
 2. Target.OfferMessage returns:
     * Accept
     * Declined
     * DecliningPermanently - will break link by default impl
     * Postponed
+    
 3. if Postponed:
     * Target call Src.ReserveMessage and returns:
         * True: Reserved
         * False
+        
     * and Target wanna going on, Target call Src.
         * ConsumeMessage: get back on
         * ReleaseReservation: give up 
@@ -30,8 +34,10 @@
 * BufferBlock:
     * FIFO queue
     * 连入连出,单入/单出
+    
 * BroadcastBlock
     * 连入连出,单入->克隆广播
+    
 * WriteOnceBlock
     * 连入连出,单入->克隆广播
     * input once

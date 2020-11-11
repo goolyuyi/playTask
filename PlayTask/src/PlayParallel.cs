@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace playCS.PlayParallel
+namespace playTask
 {
     public static class PlayParallel
     {
@@ -15,10 +15,11 @@ namespace playCS.PlayParallel
             LocalParallel();
             Part();
         }
-
+        
         static void Part()
         {
-            var s = Enumerable.Range(0, 100000000).ToArray();
+            var s = Enumerable.Range(0, 100_000_000).ToArray();
+
             var r = Partitioner.Create(s);
             var ps = r.GetPartitions(8);
 
@@ -50,7 +51,7 @@ namespace playCS.PlayParallel
 
             async Task Function()
             {
-                await Task.Delay(50);
+                await Task.Delay(5000);
                 Console.WriteLine("50ms!");
                 cts.Cancel();
             }
@@ -59,11 +60,13 @@ namespace playCS.PlayParallel
 
             try
             {
-                //进一步加速:
+                //NOTE 进一步加速:
                 //初始化线程内部状态=>线程执行=>汇总
                 var res = Parallel.For<double>(0, nums.Length,
-                    po, () => 0.0,
-                    //线程动作
+                    po,
+                    () => 0.0,
+
+                    //NOTE 线程action
                     (j, loop, subtotal) =>
                     {
                         //同线程内不用锁
@@ -71,9 +74,11 @@ namespace playCS.PlayParallel
                         po.CancellationToken.ThrowIfCancellationRequested();
                         return subtotal;
                     },
-                    //汇总动作
+
+                    //NOTE 汇总action
                     (x) =>
                     {
+                        //NOTE must lock here
                         lock (totalLock)
                         {
                             total += x;
@@ -81,7 +86,6 @@ namespace playCS.PlayParallel
                     }
                 );
                 Console.WriteLine("The total is {0:N0}", total);
-                Console.WriteLine("Press any key to exit");
             }
             catch (OperationCanceledException e)
             {
@@ -95,22 +99,26 @@ namespace playCS.PlayParallel
 
             var rnd = new Random();
 
+            //NOTE 自动执行最优的并行方案
+
             Parallel.For(0, x.Length, (i) => { x[i] = rnd.Next(10); });
 
             var res = 0;
 
+            //NOTE profile performance
+            //NOTE sometimes it slower than straight
             var stopwatch = Stopwatch.StartNew();
             stopwatch.Start();
 
             Parallel.For(0, x.Length, (i) =>
             {
-                //DON'T wrong caused by racing
+                //NOTE DON'T wrong caused by racing
                 // res += x[i];
 
                 Interlocked.Add(ref res, x[i]);
             });
             stopwatch.Stop();
-            Console.WriteLine($"stop:{stopwatch.Elapsed.Milliseconds}");
+            Console.WriteLine($"time consume for Parallel:{stopwatch.Elapsed.Milliseconds}");
 
             stopwatch.Reset();
             stopwatch.Start();
@@ -121,7 +129,7 @@ namespace playCS.PlayParallel
             }
 
             stopwatch.Stop();
-            Console.WriteLine($"stop:{stopwatch.Elapsed.Milliseconds}");
+            Console.WriteLine($"time consume for straight:{stopwatch.Elapsed.Milliseconds}");
             Console.WriteLine(resRight);
             Console.WriteLine(res);
         }

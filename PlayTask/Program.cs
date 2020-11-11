@@ -1,4 +1,5 @@
 ﻿using System;
+using playTask;
 
 namespace playTask
 {
@@ -6,7 +7,11 @@ namespace playTask
     {
         static void Main(string[] args)
         {
-            PlayDataFlow.PlayDataFlow.Play();
+            // PlayAsyncAwait.Play();
+            // PlayTask.Play();
+            // PlayTaskPattern.Play();
+            
+            PlayParallel.Play();
         }
     }
 }
