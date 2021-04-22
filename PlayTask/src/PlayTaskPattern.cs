@@ -11,10 +11,10 @@ namespace playTask
     {
         public static void Play()
         {
-            // RetryTask();
-            // Interleaved();
-            // WhenAllOrFirstException();
-            // SameAsDelay();
+            RetryTask();
+            Interleaved();
+            WhenAllOrFirstException();
+            SameAsDelay();
             PlayAsyncCache();
             //NOTE MUST SEE more pattern here
             //https://docs.microsoft.com/zh-cn/dotnet/standard/asynchronous-programming-patterns/consuming-the-task-based-asynchronous-pattern
@@ -66,7 +66,7 @@ namespace playTask
 
         static void RetryTask()
         {
-            async Task<T> _RetryOnFault<T>(
+            async Task<T> RetryOnFault<T>(
                 Func<Task<T>> function,
                 int maxTries,
                 Func<Task> retryWhen
@@ -92,7 +92,7 @@ namespace playTask
 
             try
             {
-                var retryTask = _RetryOnFault(async () =>
+                var retryTask = RetryOnFault(async () =>
                 {
                     await Task.Delay(1000);
                     throw new Exception("aaaa");
@@ -132,7 +132,6 @@ namespace playTask
                         TaskScheduler.Default);
                 }
 
-                Task aaaa;
                 return from source in sources
                     select source.Task;
             }
@@ -199,9 +198,6 @@ namespace playTask
                 timer = new Timer(delegate
                 {
                     timer.Dispose();
-
-                    //NOTE 类似于 js Promise.Resolve
-
                     tcs.TrySetResult(DateTimeOffset.UtcNow);
                 }, null, Timeout.Infinite, Timeout.Infinite);
 
@@ -227,8 +223,7 @@ namespace playTask
 
             public AsyncCache(Func<TKey, Task<TValue>> valueFactory)
             {
-                if (valueFactory == null) throw new ArgumentNullException("loader");
-                _valueFactory = valueFactory;
+                _valueFactory = valueFactory ?? throw new ArgumentNullException("loader");
                 _map = new ConcurrentDictionary<TKey, Lazy<Task<TValue>>>();
             }
 

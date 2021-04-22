@@ -64,7 +64,7 @@ namespace playTask
         }
 
 
-        //NOTE Cancel by token
+        //Cancel by token
         static async void AwaitIt4Async()
         {
             CancellationTokenSource cts = new CancellationTokenSource();
@@ -75,15 +75,14 @@ namespace playTask
             }
 
             Task taskDo = default;
+            taskDo = Do();
+            await Task.Delay(500);
+            cts.Cancel();
+
+            //will throw a TaskCanceledException
             try
             {
-                taskDo = Do();
-                await Task.Delay(500);
-                cts.Cancel();
-
-                //NOTE will throw a TaskCanceledException because AWAIT
                 await taskDo;
-                Console.WriteLine(nameof(AwaitIt4Async) + "OKAY");
             }
             catch (TaskCanceledException e)
             {
@@ -92,28 +91,29 @@ namespace playTask
                 Console.WriteLine(taskDo?.Status);
 
 
-                //NOTE get a TaskCanceledException here
+                //get a TaskCanceledException here
                 Console.WriteLine(e);
             }
+
+            Console.WriteLine(nameof(AwaitIt4Async) + "OKAY");
         }
 
 
-        //NOTE await
         static async void AwaitIt5Async()
         {
             int n = 1000 * 1000;
-            Func<int> f = () =>
-                {
-                    int res = 0;
-                    for (var i = 0; i < n; i++)
-                    {
-                        res += 1;
-                        Math.Sqrt(res);
-                    }
 
-                    return res;
+            Func<int> f = () =>
+            {
+                int res = 0;
+                for (var i = 0; i < n; i++)
+                {
+                    res += 1;
+                    Math.Sqrt(res);
                 }
-                ;
+
+                return res;
+            };
 
             //SEND to threadpool
             var t = Task.Run(f);

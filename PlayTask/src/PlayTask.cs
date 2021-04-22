@@ -10,11 +10,11 @@ namespace playTask
     {
         public static void Play()
         {
-            // SimpleTask();
-            // InputOutputObjAndFactory();
-            // CancelIt();
-            // ContinueTask();
-            // except();
+            SimpleTask();
+            InputOutputObjAndFactory();
+            CancelIt();
+            ContinueTask();
+            except();
         }
 
         static void except()
@@ -43,11 +43,10 @@ namespace playTask
             {
                 Task.WaitAll(task1, continuation);
             }
-            catch (
-                //NOTE 由多个异常聚合而成!
-                AggregateException ae
-            )
+            catch (AggregateException ae)
             {
+                //AggregateException aggregate exceptions...
+
                 Console.WriteLine("ae:" + ae.InnerExceptions.Count);
                 Console.WriteLine(task1.Exception);
                 Console.WriteLine(continuation.Exception);
@@ -95,6 +94,7 @@ namespace playTask
                         Console.WriteLine(Task.CurrentId);
                         while (true)
                         {
+                            //cancellation raise a exception
                             cts.Token.ThrowIfCancellationRequested();
                             Task.Delay(100).Wait();
                             Console.WriteLine("waiting..." + DateTime.Now.Millisecond);
@@ -114,10 +114,9 @@ namespace playTask
         {
             var ts = new Task<string>[10];
 
-
             for (int i = 0; i < ts.Length; i++)
             {
-                //NOTE Task.Factory MANUALLY create a Task
+                //use Task.Factory MANUALLY create a Task
                 ts[i] = Task.Factory.StartNew((object o) =>
                     {
                         Console.WriteLine(Task.CurrentId);
@@ -134,6 +133,7 @@ namespace playTask
             }
 
             Task.WaitAll(ts);
+
             for (var i = 0; i < ts.Length; i++)
             {
                 //NOTE also can use
@@ -158,7 +158,7 @@ namespace playTask
             t.Wait();
             Console.WriteLine("waiting?");
 
-            //NOTE this will schedule task TO WORKING THREAD...
+            //this will schedule task TO WORKING THREAD...
             var t2 = Task.Run(SimpleAction);
             t2.Wait();
 

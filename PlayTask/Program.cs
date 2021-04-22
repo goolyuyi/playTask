@@ -1,16 +1,12 @@
-﻿using System;
-using playTask;
-
-namespace playTask
+﻿namespace playTask
 {
     class Program
     {
         static void Main(string[] args)
         {
-            // PlayAsyncAwait.Play();
-            // PlayTask.Play();
-            // PlayTaskPattern.Play();
-            
+            PlayAsyncAwait.Play();
+            PlayTask.Play();
+            PlayTaskPattern.Play();
             PlayParallel.Play();
         }
     }
